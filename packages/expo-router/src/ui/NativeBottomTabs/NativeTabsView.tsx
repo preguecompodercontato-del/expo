@@ -1,6 +1,6 @@
 import { Platform } from 'expo-modules-core';
 import React from 'react';
-import { BottomTabs, BottomTabsScreen, featureFlags } from 'react-native-screens';
+import { BottomTabs, BottomTabsScreen, enableFreeze, featureFlags } from 'react-native-screens';
 
 // import { useBottomTabAccessory } from './NativeTabsViewContext';
 import { TabInfoContext } from './TabInfoContext';
@@ -8,6 +8,8 @@ import type { NativeTabsViewProps } from './types';
 
 const isControlledMode = Platform.OS === 'android';
 featureFlags.experiment.controlledBottomTabs = isControlledMode;
+
+enableFreeze(false);
 
 export function NativeTabsView(props: NativeTabsViewProps) {
   const { builder, style } = props;

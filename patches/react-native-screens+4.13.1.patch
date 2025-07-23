@@ -1,0 +1,142 @@
+diff --git a/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/Screen.kt b/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/Screen.kt
+index f9ff057..948337f 100644
+--- a/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/Screen.kt
++++ b/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/Screen.kt
+@@ -33,13 +33,15 @@ import com.swmansion.rnscreens.events.HeaderHeightChangeEvent
+ import com.swmansion.rnscreens.events.SheetDetentChangedEvent
+ import com.swmansion.rnscreens.ext.asScreenStackFragment
+ import com.swmansion.rnscreens.ext.parentAsViewGroup
++import com.swmansion.rnscreens.gamma.common.FragmentProviding
+ 
+ @SuppressLint("ViewConstructor") // Only we construct this view, it is never inflated.
+ class Screen(
+     val reactContext: ThemedReactContext,
+ ) : FabricEnabledViewGroup(reactContext),
+-    ScreenContentWrapper.OnLayoutCallback {
+-    val fragment: Fragment?
++    ScreenContentWrapper.OnLayoutCallback,
++    FragmentProviding {
++    override val fragment: Fragment?
+         get() = fragmentWrapper?.fragment
+ 
+     val sheetBehavior: BottomSheetBehavior<Screen>?
+diff --git a/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenContainer.kt b/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenContainer.kt
+index 400f209..6c651f9 100644
+--- a/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenContainer.kt
++++ b/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/ScreenContainer.kt
+@@ -176,26 +176,27 @@ open class ScreenContainer(
+     private fun setupFragmentManager() {
+         var parent: ViewParent = this
+         // We traverse view hierarchy up until we find screen parent or a root view
+-        while (!(parent is ReactRootView || parent is Screen || parent is FragmentProviding) &&
++        while (!(parent is ReactRootView || parent is FragmentProviding) &&
+             parent.parent != null
+         ) {
+             parent = parent.parent
+         }
+-        // If parent is of type Screen it means we are inside a nested fragment structure.
++        // If parent is of type FragmentProviding it means we are inside a nested fragment structure.
+         // Otherwise we expect to connect directly with root view and get root fragment manager
+-        if (parent is Screen) {
+-            checkNotNull(
+-                parent.fragmentWrapper?.let { fragmentWrapper ->
+-                    parentScreenWrapper = fragmentWrapper
+-                    fragmentWrapper.addChildScreenContainer(this)
+-                    setFragmentManager(fragmentWrapper.fragment.childFragmentManager)
+-                },
+-            ) { "Parent Screen does not have its Fragment attached" }
+-        } else if (parent is FragmentProviding) {
+-            // TODO: We're missing parent-child relationship here between old container & new one
++        if (parent is FragmentProviding) {
++            if (parent is Screen) {
++                checkNotNull(
++                    parent.fragmentWrapper?.let { fragmentWrapper ->
++                        parentScreenWrapper = fragmentWrapper
++                        fragmentWrapper.addChildScreenContainer(this)
++                    },
++                ) { "Parent Screen does not have its Fragment attached" }
++            }  else {
++              // TODO: We're missing parent-child relationship here between old container & new one
++            }
+             val fragmentManager =
+                 checkNotNull(
+-                    parent.getFragment(),
++                    parent.fragment,
+                 ) { "[RNScreens] Parent $parent returned nullish fragment" }.childFragmentManager
+             setFragmentManager(fragmentManager)
+         } else {
+diff --git a/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/common/FragmentProviding.kt b/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/common/FragmentProviding.kt
+index 5c211a9..28998b6 100644
+--- a/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/common/FragmentProviding.kt
++++ b/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/common/FragmentProviding.kt
+@@ -7,5 +7,5 @@ import androidx.fragment.app.Fragment
+  * can be used to retrieve child fragment manager for nesting operations.
+  */
+ interface FragmentProviding {
+-    fun getFragment(): Fragment?
++    val fragment: Fragment?
+ }
+diff --git a/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/helpers/FragmentManagerHelper.kt b/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/helpers/FragmentManagerHelper.kt
+index c809c4c..eca5902 100644
+--- a/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/helpers/FragmentManagerHelper.kt
++++ b/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/helpers/FragmentManagerHelper.kt
+@@ -23,7 +23,7 @@ object FragmentManagerHelper {
+         // If parent adheres to FragmentProviding interface it means we are inside a nested fragment structure.
+         // Otherwise we expect to connect directly with root view and get root fragment manager
+         if (parent is FragmentProviding) {
+-            return checkNotNull(parent.getFragment()) {
++            return checkNotNull(parent.fragment) {
+                 "[RNScreens] Parent fragment providing view $parent returned nullish fragment"
+             }.childFragmentManager
+         } else {
+diff --git a/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/tabs/TabScreen.kt b/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/tabs/TabScreen.kt
+index 0d236d8..b52d2fa 100644
+--- a/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/tabs/TabScreen.kt
++++ b/node_modules/react-native-screens/android/src/main/java/com/swmansion/rnscreens/gamma/tabs/TabScreen.kt
+@@ -29,6 +29,9 @@ class TabScreen(
+ 
+     internal lateinit var eventEmitter: TabScreenEventEmitter
+ 
++    override val fragment: Fragment?
++        get() = tabScreenDelegate.get()?.getFragmentForTabScreen(this)
++
+     var tabKey: String? = null
+         set(value) {
+             field =
+@@ -79,8 +82,6 @@ class TabScreen(
+         tabScreenDelegate = WeakReference(delegate)
+     }
+ 
+-    override fun getFragment(): Fragment? = tabScreenDelegate.get()?.getFragmentForTabScreen(this)
+-
+     private fun onTabFocusChangedFromJS() {
+         tabScreenDelegate.get()?.onTabFocusChangedFromJS(this, isFocusedTab)
+     }
+diff --git a/node_modules/react-native-screens/ios/bottom-tabs/RNSBottomTabsHostComponentView.h b/node_modules/react-native-screens/ios/bottom-tabs/RNSBottomTabsHostComponentView.h
+index cc45537..9fe86db 100644
+--- a/node_modules/react-native-screens/ios/bottom-tabs/RNSBottomTabsHostComponentView.h
++++ b/node_modules/react-native-screens/ios/bottom-tabs/RNSBottomTabsHostComponentView.h
+@@ -60,6 +60,8 @@ NS_ASSUME_NONNULL_BEGIN
+ 
+ - (BOOL)emitOnNativeFocusChangeRequestSelectedTabScreen:(nonnull RNSBottomTabsScreenComponentView *)tabScreen;
+ 
++- (UITabBarController*) getController;
++
+ #if !RCT_NEW_ARCH_ENABLED
+ #pragma mark - LEGACY Event blocks
+ 
+diff --git a/node_modules/react-native-screens/ios/bottom-tabs/RNSBottomTabsHostComponentView.mm b/node_modules/react-native-screens/ios/bottom-tabs/RNSBottomTabsHostComponentView.mm
+index c148fb7..09a2962 100644
+--- a/node_modules/react-native-screens/ios/bottom-tabs/RNSBottomTabsHostComponentView.mm
++++ b/node_modules/react-native-screens/ios/bottom-tabs/RNSBottomTabsHostComponentView.mm
+@@ -44,6 +44,10 @@ @implementation RNSBottomTabsHostComponentView {
+   BOOL _needsTabBarAppearanceUpdate;
+ }
+ 
++- (UITabBarController*) getController {
++    return _controller;
++}
++
+ - (instancetype)initWithFrame:(CGRect)frame
+ {
+   if (self = [super initWithFrame:frame]) {

@@ -1,1 +1,1 @@
-{"version":3,"file":"NativeTabsView.d.ts","sourceRoot":"","sources":["../../../src/ui/NativeBottomTabs/NativeTabsView.tsx"],"names":[],"mappings":"AACA,OAAO,KAAK,MAAM,OAAO,CAAC;AAK1B,OAAO,KAAK,EAAE,mBAAmB,EAAE,MAAM,SAAS,CAAC;AAKnD,wBAAgB,cAAc,CAAC,KAAK,EAAE,mBAAmB,qBAoFxD"}
+{"version":3,"file":"NativeTabsView.d.ts","sourceRoot":"","sources":["../../../src/ui/NativeBottomTabs/NativeTabsView.tsx"],"names":[],"mappings":"AACA,OAAO,KAAK,MAAM,OAAO,CAAC;AAK1B,OAAO,KAAK,EAAE,mBAAmB,EAAE,MAAM,SAAS,CAAC;AAOnD,wBAAgB,cAAc,CAAC,KAAK,EAAE,mBAAmB,qBAoFxD"}
