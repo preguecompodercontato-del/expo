@@ -1,6 +1,10 @@
 import './install';
 
-import type { ExpoRoutesManifestV1, RouteInfo } from 'expo-router/build/routes-manifest';
+import type {
+  ExpoRoutesManifestV1,
+  MiddlewareInfo,
+  RouteInfo,
+} from 'expo-router/build/routes-manifest';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -17,6 +21,7 @@ function getProcessedManifest(path: string): ExpoRoutesManifestV1<RegExp> {
 
   const parsed: ExpoRoutesManifestV1<RegExp> = {
     ...routesManifest,
+    middleware: routesManifest.middleware,
     notFoundRoutes: routesManifest.notFoundRoutes.map((value: any) => {
       return { ...value, namedRegex: new RegExp(value.namedRegex) };
     }),
@@ -79,6 +84,21 @@ export function createRequestHandler(
       }
       return import(filePath);
     },
+    getMiddleware = async (route) => {
+      // TODO(@hassankhan): Either merge with getApiRoute or extract logic for both into one place
+      const filePath = path.join(distFolder, route.file);
+
+      debug(`Loading middleware: ${route.file}: ${filePath}`);
+
+      if (!fs.existsSync(filePath)) {
+        return null;
+      }
+
+      if (/\.c?js$/.test(filePath)) {
+        return require(filePath);
+      }
+      return import(filePath);
+    },
     logApiRouteExecutionError = (error: Error) => {
       console.error(error);
     },
@@ -98,6 +118,7 @@ export function createRequestHandler(
     getHtml?: (request: Request, route: RouteInfo<RegExp>) => Promise<string | Response | null>;
     getRoutesManifest?: (distFolder: string) => Promise<ExpoRoutesManifestV1<RegExp> | null>;
     getApiRoute?: (route: RouteInfo<RegExp>) => Promise<any>;
+    getMiddleware?: (route: MiddlewareInfo) => Promise<any>;
     logApiRouteExecutionError?: (error: Error) => void;
     handleApiRouteError?: (error: Error) => Promise<Response>;
   } = {}
@@ -125,6 +146,54 @@ export function createRequestHandler(
     let sanitizedPathname = url.pathname;
 
     debug('Request', sanitizedPathname);
+
+    // Execute middleware first, before any route matching
+    if (routesManifest.middleware) {
+      try {
+        const middlewareModule = await getMiddleware(routesManifest.middleware);
+        if (middlewareModule?.default) {
+          const middlewareResponse = await middlewareModule.default(request);
+          if (middlewareResponse instanceof Response) {
+            debug('Middleware returned response, short-circuiting');
+            return middlewareResponse;
+          }
+          // If middleware returns undefined/void, continue to route matching
+        }
+      } catch (error) {
+        // Only show detailed errors for development; in production, show a generic error to prevent leaking sensitive information
+        debug('Middleware execution error:', error);
+
+        const isApiRequest = routesManifest.apiRoutes.some((route) =>
+          route.namedRegex.test(sanitizedPathname)
+        );
+
+        if (isApiRequest) {
+          return new Response(
+            JSON.stringify({
+              error:
+                process.env.NODE_ENV === 'development'
+                  ? error
+                  : { message: 'Internal Server Error' },
+            }),
+            {
+              status: 500,
+              headers: { 'Content-Type': 'application/json' },
+            }
+          );
+        } else {
+          if (process.env.NODE_ENV === 'development') {
+            return handleApiRouteError(error as Error);
+          }
+
+          // TODO(@hassankhan): Should we return any HTML at all?
+          const errorHtml = `<!DOCTYPE html><html><head><title>Server Error</title></head><body><h1>Internal Server Error</h1></body></html>`;
+          return new Response(errorHtml, {
+            status: 500,
+            headers: { 'Content-Type': 'text/html' },
+          });
+        }
+      }
+    }
 
     if (routesManifest.redirects) {
       for (const route of routesManifest.redirects) {
