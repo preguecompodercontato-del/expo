@@ -80,7 +80,11 @@ object MediaLibraryUtils {
     }
   }
 
-  fun deleteAssets(context: Context, selection: String?, selectionArgs: Array<out String?>?) {
+  suspend fun deleteAssets(
+    context: Context,
+    selection: String?,
+    selectionArgs: Array<out String?>?
+  ) = withContext(Dispatchers.IO) {
     val projection = arrayOf(MediaStore.MediaColumns._ID, MediaStore.MediaColumns.DATA)
     try {
       context.contentResolver.query(
@@ -94,6 +98,9 @@ object MediaLibraryUtils {
           throw AssetFileException("Could not delete assets. Cursor is null.")
         } else {
           while (filesToDelete.moveToNext()) {
+            // Interrupting file deletion when scope is closed is desired, as
+            // user might want to stop this process in the meantime
+            coroutineContext.ensureActive()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
               val columnId = filesToDelete.getColumnIndex(MediaStore.MediaColumns._ID)
               val id = filesToDelete.getLong(columnId)
