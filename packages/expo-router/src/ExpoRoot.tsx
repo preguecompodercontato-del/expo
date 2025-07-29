@@ -24,6 +24,7 @@ import { Screen } from './primitives';
 import { RequireContext } from './types';
 import { canOverrideStatusBarBehavior } from './utils/statusbar';
 import * as SplashScreen from './views/Splash';
+import { Unmatched } from './views/Unmatched';
 
 export type ExpoRootProps = {
   context: RequireContext;
@@ -174,11 +175,17 @@ function ContextNavigator({
 
 function Content() {
   const { state, descriptors, NavigationContent } = useNavigationBuilder(StackRouter, {
-    children: <Screen name={INTERNAL_SLOT_NAME} component={store.rootComponent} />,
+    children: [
+      <Screen name={INTERNAL_SLOT_NAME} component={store.rootComponent} />,
+      // TODO: Add sitemap
+      <Screen name="+not-found" component={Unmatched} />,
+    ],
     id: INTERNAL_SLOT_NAME,
   });
 
-  return <NavigationContent>{descriptors[state.routes[0].key].render()}</NavigationContent>;
+  return (
+    <NavigationContent>{descriptors[state.routes[state.index].key].render()}</NavigationContent>
+  );
 }
 
 let onUnhandledAction: (action: NavigationAction) => void;

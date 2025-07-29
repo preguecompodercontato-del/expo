@@ -11,6 +11,9 @@ export declare function getNavigationConfig(routes: RouteNode, metaOnly?: boolea
             screens: Record<string, import("./getReactNavigationConfig").Screen>;
             path: string;
         };
+        '+not-found': {
+            path: string;
+        };
     };
 };
 export type ExpoLinkingOptions<T extends object = Record<string, unknown>> = LinkingOptions<T> & {

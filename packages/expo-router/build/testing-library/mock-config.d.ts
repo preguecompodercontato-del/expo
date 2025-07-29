@@ -10,6 +10,9 @@ export declare function getMockConfig(context: MockContextConfig, metaOnly?: boo
             screens: Record<string, import("../getReactNavigationConfig").Screen>;
             path: string;
         };
+        '+not-found': {
+            path: string;
+        };
     };
 };
 export declare function getMockContext(context: MockContextConfig): ((id: string) => any) & {

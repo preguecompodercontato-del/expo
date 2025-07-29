@@ -51,6 +51,7 @@ const ModalContext_1 = require("./modal/ModalContext");
 const primitives_1 = require("./primitives");
 const statusbar_1 = require("./utils/statusbar");
 const SplashScreen = __importStar(require("./views/Splash"));
+const Unmatched_1 = require("./views/Unmatched");
 const isTestEnv = process.env.NODE_ENV === 'test';
 const INITIAL_METRICS = react_native_1.Platform.OS === 'web' || isTestEnv
     ? {
@@ -154,10 +155,14 @@ function ContextNavigator({ context, location: initialLocation = initialUrl, wra
 }
 function Content() {
     const { state, descriptors, NavigationContent } = (0, native_1.useNavigationBuilder)(native_1.StackRouter, {
-        children: <primitives_1.Screen name={constants_1.INTERNAL_SLOT_NAME} component={router_store_1.store.rootComponent}/>,
+        children: [
+            <primitives_1.Screen name={constants_1.INTERNAL_SLOT_NAME} component={router_store_1.store.rootComponent}/>,
+            // TODO: Add sitemap
+            <primitives_1.Screen name="+not-found" component={Unmatched_1.Unmatched}/>,
+        ],
         id: constants_1.INTERNAL_SLOT_NAME,
     });
-    return <NavigationContent>{descriptors[state.routes[0].key].render()}</NavigationContent>;
+    return (<NavigationContent>{descriptors[state.routes[state.index].key].render()}</NavigationContent>);
 }
 let onUnhandledAction;
 if (process.env.NODE_ENV !== 'production') {

@@ -15,6 +15,9 @@ function getNavigationConfig(routes, metaOnly = true) {
                 path: '',
                 ...(0, getReactNavigationConfig_1.getReactNavigationConfig)(routes, metaOnly),
             },
+            '+not-found': {
+                path: '*',
+            },
         },
     };
 }

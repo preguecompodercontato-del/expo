@@ -149,6 +149,7 @@ export function useStore(
 
   const routeNode = getRoutes(context, {
     ...config,
+    skipGenerated: true,
     ignoreEntryPoints: true,
     platform: Platform.OS,
     preserveRedirectAndRewrites: true,

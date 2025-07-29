@@ -18,6 +18,9 @@ export function getNavigationConfig(routes: RouteNode, metaOnly: boolean = true)
         path: '',
         ...getReactNavigationConfig(routes, metaOnly),
       },
+      '+not-found': {
+        path: '*',
+      },
     },
   };
 }
