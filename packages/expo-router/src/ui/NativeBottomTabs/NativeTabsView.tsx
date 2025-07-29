@@ -17,9 +17,18 @@ export function NativeTabsView(props: NativeTabsViewProps) {
 
   // const focusedScreenKey = state.routes[state.index].key;
 
+  console.log(
+    routes.map((route) => ({
+      key: route.key,
+      name: route.name,
+      options: descriptors[route.key].options,
+    }))
+  );
+
   const children = routes
-    .filter(({ key }) => !descriptors[key].options.hidden)
-    .map((route, index) => {
+    .map((route, index) => ({ route, index }))
+    .filter(({ route: { key } }) => !descriptors[key].options.hidden)
+    .map(({ route, index }) => {
       const descriptor = descriptors[route.key];
       const isFocused = state.index === index;
 
