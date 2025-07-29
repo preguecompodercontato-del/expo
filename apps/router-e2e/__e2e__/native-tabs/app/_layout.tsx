@@ -4,7 +4,9 @@ import { NativeTabs } from 'expo-router/build/ui/NativeBottomTabs/NativeBottomTa
 import { IOSIcon } from 'expo-router/build/ui/NativeBottomTabs/NavigatorElements';
 import { Appearance } from 'react-native';
 
-Appearance.setColorScheme('dark');
+if (process.env.EXPO_OS !== 'web') {
+  Appearance.setColorScheme('dark');
+}
 
 export default function Layout() {
   return (

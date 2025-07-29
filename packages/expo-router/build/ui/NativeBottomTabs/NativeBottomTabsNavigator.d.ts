@@ -1,5 +1,5 @@
 import React, { ComponentProps, PropsWithChildren } from 'react';
-import { type NativeTabsViewProps } from './NativeTabsView';
+import { type NativeTabsViewProps } from './types';
 import { Tab } from './TabOptions';
 declare function NativeTabsNavigator({ children, ...rest }: PropsWithChildren<Omit<NativeTabsViewProps, 'builder'>>): React.JSX.Element;
 export declare const createNativeTabNavigator: (config?: any) => any;

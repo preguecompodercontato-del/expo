@@ -9,8 +9,8 @@ const react_1 = __importDefault(require("react"));
 const react_native_screens_1 = require("react-native-screens");
 const NativeBottomTabsRouter_1 = require("./NativeBottomTabsRouter");
 const NativeTabsView_1 = require("./NativeTabsView");
-const __1 = require("../..");
 const NativeTabsViewContext_1 = require("./NativeTabsViewContext");
+const __1 = require("../..");
 const TabOptions_1 = require("./TabOptions");
 (0, react_native_screens_1.enableFreeze)(true);
 function NativeTabsNavigator({ children, ...rest }) {

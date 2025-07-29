@@ -1,61 +1,13 @@
-import {
-  DefaultRouterOptions,
-  ParamListBase,
-  TabNavigationState,
-  TabRouterOptions,
-  useNavigationBuilder,
-} from '@react-navigation/native';
 import { Platform } from 'expo-modules-core';
 import React from 'react';
-import { type ColorValue, type TextStyle } from 'react-native';
-import {
-  BottomTabs,
-  BottomTabsScreen,
-  featureFlags,
-  type BottomTabsScreenProps,
-} from 'react-native-screens';
+import { BottomTabs, BottomTabsScreen, featureFlags } from 'react-native-screens';
 
 // import { useBottomTabAccessory } from './NativeTabsViewContext';
 import { TabInfoContext } from './TabInfoContext';
+import type { NativeTabsViewProps } from './types';
 
 const isControlledMode = Platform.OS === 'android';
 featureFlags.experiment.controlledBottomTabs = isControlledMode;
-
-export type NativeTabOptions = Omit<
-  BottomTabsScreenProps,
-  | 'children'
-  | 'placeholder'
-  | 'onWillAppear'
-  | 'onDidAppear'
-  | 'onWillDisappear'
-  | 'onDidDisappear'
-  | 'isFocused'
-  | 'tabKey'
-> &
-  DefaultRouterOptions & { hidden?: boolean };
-
-export interface NativeTabsViewProps {
-  style?: {
-    fontFamily?: TextStyle['fontFamily'];
-    fontSize?: TextStyle['fontSize'];
-    fontWeight?: TextStyle['fontWeight'];
-    fontStyle?: TextStyle['fontStyle'];
-    color?: TextStyle['color'];
-    backgroundColor?: ColorValue;
-    blurEffect?: BottomTabsScreenProps['tabBarBlurEffect'];
-    tintColor?: ColorValue;
-    badgeBackgroundColor?: ColorValue;
-  };
-  builder: ReturnType<
-    typeof useNavigationBuilder<
-      TabNavigationState<ParamListBase>,
-      TabRouterOptions,
-      Record<string, (...args: any) => void>,
-      NativeTabOptions,
-      Record<string, any>
-    >
-  >;
-}
 
 export function NativeTabsView(props: NativeTabsViewProps) {
   const { builder, style } = props;

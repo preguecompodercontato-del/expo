@@ -1,8 +1,8 @@
 import type { JSXElementConstructor, PropsWithChildren, ReactElement, ReactNode } from 'react';
 import React, { isValidElement } from 'react';
 
-import type { NativeTabOptions } from './NativeTabsView';
 import { AndroidIcon, Badge, Icon, IOSIcon, Title } from './NavigatorElements';
+import type { NativeTabOptions } from './types';
 
 export type TabProps = PropsWithChildren<{
   name: string;
